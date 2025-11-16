@@ -1,0 +1,43 @@
+name: Deploy to Oracle Cloud
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Deploy to Oracle Cloud
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.ORACLE_HOST }}
+        username: ubuntu
+        key: ${{ secrets.ORACLE_SSH_KEY }}
+        script: |
+          cd /home/ubuntu/BE
+          git pull origin main
+          
+          # 환경변수 설정 (systemd에 주입)
+          sudo systemctl stop django
+          
+          # systemd 환경변수 업데이트
+          sudo sed -i "s/SECRET_KEY=.*/SECRET_KEY=${{ secrets.SECRET_KEY }}/" /etc/systemd/system/django.service
+          sudo sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.DB_PASSWORD }}/" /etc/systemd/system/django.service
+          
+          # 가상환경에서 패키지 설치
+          source venv/bin/activate
+          pip install -r requirements.txt
+          
+          # 마이그레이션
+          python manage.py migrate
+          python manage.py collectstatic --noinput
+          
+          # 서비스 재시작
+          sudo systemctl daemon-reload
+          sudo systemctl start django
+          sudo systemctl restart nginx

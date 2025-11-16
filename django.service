@@ -1,0 +1,43 @@
+[Unit]
+Description=Django TukCommunity Application
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/BE
+
+# 환경변수 직접 설정 (민감하지 않은 정보)
+Environment="DJANGO_ENV=production"
+Environment="DB_ENGINE=django.db.backends.mysql"
+Environment="DB_NAME=tuk_community"
+Environment="DB_USER=dbuser"
+Environment="DB_HOST=localhost"
+Environment="DB_PORT=3306"
+
+# 민감한 환경변수는 별도 파일에서 로드 (600 권한)
+EnvironmentFile=/etc/django/secrets.env
+
+# Gunicorn 실행
+ExecStart=/home/ubuntu/BE/venv/bin/gunicorn \
+    --workers 3 \
+    --bind unix:/home/ubuntu/BE/gunicorn.sock \
+    --timeout 120 \
+    --access-logfile /var/log/django/access.log \
+    --error-logfile /var/log/django/error.log \
+    TukCommunityBE.wsgi:application
+
+# 보안 설정
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/ubuntu/BE
+
+# 재시작 정책
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
