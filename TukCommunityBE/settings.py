@@ -1,55 +1,18 @@
-"""
-Django settings for TukCommunityBE project.
-Vault를 사용한 안전한 설정
-"""
 
 from pathlib import Path
 import os
-import base64
+from dotenv import load_dotenv
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 환경 확인 (로컬 vs 프로덕션)
-IS_PRODUCTION = os.getenv('DJANGO_ENV') == 'production'
+# .env 파일 로드
+load_dotenv()
 
-
-def get_secret_from_vault(secret_ocid):
-    """Oracle Cloud Vault에서 시크릿 가져오기"""
-    try:
-        import oci
-        # Instance Principal 인증 (EC2 인스턴스에서 자동)
-        signer = oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
-        secrets_client = oci.secrets.SecretsClient(config={}, signer=signer)
-        
-        # Secret 가져오기
-        secret_bundle = secrets_client.get_secret_bundle(secret_ocid)
-        base64_secret = secret_bundle.data.secret_bundle_content.content
-        
-        # Base64 디코딩
-        secret_bytes = base64.b64decode(base64_secret)
-        return secret_bytes.decode('utf-8')
-    except Exception as e:
-        print(f"⚠️  Vault에서 시크릿 가져오기 실패: {e}")
-        return None
-
-
-# 환경별 설정
-if IS_PRODUCTION:
-    # 🔐 프로덕션: Oracle Cloud Vault 사용
-    # Vault에서 Secret을 생성한 후 OCID를 여기에 입력하세요
-    SECRET_KEY = get_secret_from_vault(os.getenv('VAULT_SECRET_KEY_OCID'))
-    DB_PASSWORD = get_secret_from_vault(os.getenv('VAULT_DB_PASSWORD_OCID'))
-    DEBUG = False
-    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
-else:
-    # 🛠️  로컬 개발: .env 파일 사용
-    from dotenv import load_dotenv
-    load_dotenv()
-    SECRET_KEY = os.getenv('SECRET_KEY')
-    DB_PASSWORD = os.getenv('DB_PASSWORD')
-    DEBUG = True
-    ALLOWED_HOSTS = ['*']
+# 환경 설정
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else ['*']
 
 
 # Application definition
@@ -102,11 +65,12 @@ DATABASES = {
         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.mysql'),
         'NAME': os.getenv('DB_NAME', 'tuk_community'),
         'USER': os.getenv('DB_USER', 'root'),
-        'PASSWORD': DB_PASSWORD,
+        'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', '3306'),
         'OPTIONS': {
             'charset': 'utf8mb4',
+            'auth_plugin': 'caching_sha2_password',
         },
     }
 }
@@ -142,17 +106,13 @@ REST_FRAMEWORK = {
 }
 
 # CORS 설정
-if IS_PRODUCTION:
-    CORS_ALLOW_ALL_ORIGINS = False
-    CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
-    CORS_ALLOW_CREDENTIALS = True
-else:
-    CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else []
+CORS_ALLOW_ALL_ORIGINS = len(CORS_ALLOWED_ORIGINS) == 0  # CORS_ALLOWED_ORIGINS가 비어있으면 모두 허용
+CORS_ALLOW_CREDENTIALS = True
 
 # 보안 설정 (프로덕션)
-if IS_PRODUCTION:
-    SECURE_SSL_REDIRECT = True
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
