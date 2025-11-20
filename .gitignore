@@ -16,6 +16,3 @@ __pycache__/
 *.pyc
 *.pyo
 
-# 데이터베이스
-*.sqlite3
-db.sqlite3
