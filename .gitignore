@@ -4,6 +4,9 @@
 # 맥 불필요한 파일 삭제
 .DS_Store
 
+# github
+.github
+
 # 환경변수 파일 (중요!)
 .env
 
