@@ -25,7 +25,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt',
     'BE',
+    'sources.accounts',
 ]
 
 MIDDLEWARE = [
@@ -83,6 +85,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+AUTH_USER_MODEL = 'accounts.User'
+
 # Internationalization
 LANGUAGE_CODE = 'ko-kr'
 TIME_ZONE = 'Asia/Seoul'
@@ -118,3 +122,9 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+
+# Simple JWT 설정
+SIMPLE_JWT = {
+    'USER_ID_FIELD': 'user_id',  # 기본값 'id'를 'user_id'로 변경 (핵심!)
+    'USER_ID_CLAIM': 'user_id',
+}
