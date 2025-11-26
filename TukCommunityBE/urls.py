@@ -1,9 +1,10 @@
+# TukCommunityBE/urls.py
+
 from django.contrib import admin
-from django.urls import path
-from BE.views import health_check
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('health/', health_check, name='health_check'),
-    path('', health_check, name='root_health_check'),
+    # accounts 앱의 URL들을 /api/accounts/ 밑으로 연결
+    path('api/accounts/', include('sources.accounts.urls')), 
 ]
