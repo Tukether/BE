@@ -125,6 +125,6 @@ if not DEBUG:
 
 # Simple JWT 설정
 SIMPLE_JWT = {
-    'USER_ID_FIELD': 'user_id',  # 기본값 'id'를 'user_id'로 변경 (핵심!)
+    'USER_ID_FIELD': 'user_id',  # 기본값 'id'를 'user_id'로 변경
     'USER_ID_CLAIM': 'user_id',
 }

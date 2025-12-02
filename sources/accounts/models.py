@@ -63,21 +63,15 @@ class User(AbstractBaseUser):
     student_num = models.IntegerField(unique=True)
     department = models.CharField(max_length=50)
     nickname = models.CharField(max_length=30, null=True, blank=True)
-    
-    # AbstractBaseUser가 password, last_login 필드는 기본적으로 가짐
-    # 하지만 SQL 스키마엔 last_login이 없으므로 모델에는 정의하되 DB엔 없다고 처리하거나
-    # SQL에 last_login 컬럼을 추가해주는 게 좋습니다. (로그인 시 Django가 업데이트함)
-    # 여기서는 SQL을 건드리지 않기 위해 last_login은 사용하지 않도록 설정하거나 무시합니다.
-    last_login = None 
 
     create_at = models.DateTimeField(auto_now_add=True)
     update_at = models.DateTimeField(auto_now=True)
 
     objects = UserManager()
 
-    # 로그인 시 사용할 ID 필드
+    # 로그인에 사용할 ID 필드
     USERNAME_FIELD = 'email' 
-    # 슈퍼유저 생성 시 입력받을 필수 필드
+    # 슈퍼유저 생성 필수 입력 필드
     REQUIRED_FIELDS = ['student_num', 'department']
 
     @property
@@ -95,7 +89,7 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.email
 
-    # Django Admin 접속 권한 제어 (SQL의 authority 이용)
+    # Django Admin 접속 권한 제어(Autority)
     @property
     def is_staff(self):
         return self.role.authority == 1
